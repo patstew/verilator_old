@@ -124,6 +124,7 @@ public:
 	}
     }
     void writeDepend(const string& filename);
+    std::vector<string> getAllDeps();
     void writeTimes(const string& filename, const string& cmdlineIn);
     bool checkTimes(const string& filename, const string& cmdlineIn);
 };
@@ -167,6 +168,17 @@ inline void V3FileDependImp::writeDepend(const string& filename) {
 	    }
 	}
     }
+}
+
+inline std::vector<string> V3FileDependImp::getAllDeps() {
+	std::vector<string> r;
+    for (std::set<DependFile>::iterator iter=m_filenameList.begin();
+	 iter!=m_filenameList.end(); ++iter) {
+        if (!iter->target()) {
+            r.push_back(iter->filename());
+        }
+    }
+    return r;
 }
 
 inline void V3FileDependImp::writeTimes(const string& filename, const string& cmdlineIn) {
@@ -280,6 +292,9 @@ void V3File::addTgtDepend(const string& filename) {
 }
 void V3File::writeDepend(const string& filename) {
     dependImp.writeDepend(filename);
+}
+std::vector<string> V3File::getAllDeps() {
+    return dependImp.getAllDeps();
 }
 void V3File::writeTimes(const string& filename, const string& cmdlineIn) {
     dependImp.writeTimes(filename, cmdlineIn);

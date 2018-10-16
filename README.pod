@@ -204,6 +204,7 @@ The directories in the kit after de-taring are as follows:
     examples/hello_world_sc     => Example simple Verilog->SystemC conversion
     examples/tracing_c          => Example Verilog->C++ with tracing
     examples/tracing_sc         => Example Verilog->SystemC with tracing
+    examples/cmake              => Example building hello_world_c with CMake
     test_regress                => Internal tests
 
 =head1 LIMITATIONS
