@@ -345,6 +345,7 @@ detailed descriptions in L</"VERILATION ARGUMENTS"> for more information.
     --private                   Debugging; see docs
     --public                    Debugging; see docs
      -pvalue+<name>=<value>     Overwrite toplevel parameter
+    --python                    Generate python bindings
     --relative-includes         Resolve includes relative to current file
     --no-relative-cfuncs        Disallow 'this->' in generated functions
     --report-unoptflat          Extra diagnostics for UNOPTFLAT
@@ -1131,6 +1132,13 @@ optimizations as if all signals had a /*verilator public*/ comments and
 inlining.  This will also turn off inlining as if all modules had a
 /*verilator public_module*/, unless the module specifically enabled it with
 /*verilator inline_module*/.
+
+=item --python
+
+This generates a file wraps the toplevel module into a python module using
+pybind11 (https://github.com/pybind/pybind11). You will need to use CMake and
+write a small C++ file to make use of it. There is an example that could be used
+as a starting point in examples/python.
 
 =item -pvalue+I<name>=I<value>
 

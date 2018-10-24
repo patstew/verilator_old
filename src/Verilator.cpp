@@ -46,6 +46,7 @@
 #include "V3EmitC.h"
 #include "V3EmitCMake.h"
 #include "V3EmitMk.h"
+#include "V3EmitPy.h"
 #include "V3EmitV.h"
 #include "V3EmitXml.h"
 #include "V3Expand.h"
@@ -548,6 +549,10 @@ void process() {
     if (v3Global.opt.stats()) {
 	V3Stats::statsFinalAll(v3Global.rootp());
 	V3Stats::statsReport();
+    }
+
+    if (v3Global.opt.python()) {
+        V3EmitPy::emitpy();
     }
 
     if (!v3Global.opt.lintOnly() && !v3Global.opt.xmlOnly()) {
