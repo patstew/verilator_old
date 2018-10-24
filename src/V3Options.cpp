@@ -661,7 +661,6 @@ void V3Options::parseOptsList(FileLine* fl, const string& optdir, int argc, char
             else if ( onoff (sw, "-bbox-unsup", flag/*ref*/))   { m_bboxUnsup = flag; }
             else if (!strcmp(sw, "-cc"))                        { m_outFormatOk = true; m_systemC = false; }
             else if ( onoff (sw, "-cdc", flag/*ref*/))          { m_cdc = flag; }
-            else if ( onoff (sw, "-cmake", flag/*ref*/) )       { m_cmake = flag; }
             else if ( onoff (sw, "-coverage", flag/*ref*/))     { coverage(flag); }
             else if ( onoff (sw, "-coverage-line", flag/*ref*/)){ m_coverageLine = flag; }
             else if ( onoff (sw, "-coverage-toggle", flag/*ref*/)){ m_coverageToggle = flag; }
@@ -839,6 +838,16 @@ void V3Options::parseOptsList(FileLine* fl, const string& optdir, int argc, char
             }
             else if (!strcmp(sw, "-l2name")) {  // Historical and undocumented
                 m_l2Name = "v";
+            }
+            else if (!strcmp(sw, "-make")) {
+                shift;
+                if (!strcmp(argv[i], "cmake")) {
+                    m_cmake = true;
+                } else if (!strcmp(argv[i], "gmake")) {
+                    m_gmake = true;
+                } else {
+                    fl->v3fatal("Unknown build system specified: " << argv[i]);
+                }
             }
             else if (!strcmp(sw, "-no-l2name")) {  // Historical and undocumented
                 m_l2Name = "";
@@ -1115,6 +1124,10 @@ void V3Options::parseOptsList(FileLine* fl, const string& optdir, int argc, char
             shift;
         }
     }
+    // Make sure at least one build system is enabled
+    if (!m_gmake && !m_cmake) {
+        m_gmake = true;
+    }
 #undef shift
 }
 
@@ -1281,6 +1294,7 @@ V3Options::V3Options() {
     m_ignc = false;
     m_inhibitSim = false;
     m_lintOnly = false;
+    m_gmake = false;
     m_makeDepend = true;
     m_makePhony = false;
     m_orderClockDly = true;

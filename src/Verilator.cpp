@@ -560,7 +560,8 @@ void process() {
         // Makefile must be after all other emitters
         if (v3Global.opt.cmake()) {
             V3EmitCMake::emit(v3Global.rootp());
-        } else {
+        }
+        if (v3Global.opt.gmake()) {
             V3EmitMk::emitmk(v3Global.rootp());
         }
     }

@@ -537,7 +537,8 @@ sub new {
                             "--comp-limit-members 10", ],
         verilator_flags2 => [],
         verilator_flags3 => ["--clk clk"],
-        verilator_make_gcc => 1,
+        verilator_make_gmake => 1,
+        verilator_make_cmake => 0,
         verilated_debug => $Opt_Verilated_Debug,
         stdout_filename => undef,  # Redirect stdout
         %$self};
@@ -704,6 +705,21 @@ sub _read_status {
 #----------------------------------------------------------------------
 # Methods invoked by tests
 
+sub compile_vlt_cmd {
+    my $self = (ref $_[0]? shift : $Self);
+    my %param = (%{$self}, @_);  # Default arguments are from $self
+    return 1 if $self->errors || $self->skips || $self->unsupporteds;
+
+    my @vlt_cmd = (
+        "perl", "$ENV{VERILATOR_ROOT}/bin/verilator",
+        $self->compile_vlt_flags(%param),
+        $param{top_filename},
+        @{$param{v_other_filenames}},
+        $param{stdout_filename}?"> ".$param{stdout_filename}:""
+    );
+    return @vlt_cmd;
+}
+
 sub compile_vlt_flags {
     my $self = (ref $_[0]? shift : $Self);
     my %param = (%{$self}, @_);  # Default arguments are from $self
@@ -733,6 +749,8 @@ sub compile_vlt_flags {
     unshift @verilator_flags, "--threads $threads" if $param{vltmt};
     unshift @verilator_flags, "--trace-fst-thread" if $param{vltmt} && $checkflags =~ /-trace-fst/;
     unshift @verilator_flags, "--debug-partition" if $param{vltmt};
+    unshift @verilator_flags, "--make gmake" if $param{verilator_make_gmake};
+    unshift @verilator_flags, "--make cmake" if $param{verilator_make_cmake};
     if (defined $opt_optimize) {
         my $letters = "";
         if ($opt_optimize =~ /[a-zA-Z]/) {
@@ -747,7 +765,7 @@ sub compile_vlt_flags {
         unshift @verilator_flags, "--O".$letters;
     }
 
-    my @cmdargs = ("perl", "$ENV{VERILATOR_ROOT}/bin/verilator",
+    my @cmdargs = (
                    "--prefix ".$param{VM_PREFIX},
                    @verilator_flags,
                    @{$param{verilator_flags2}},
@@ -757,9 +775,6 @@ sub compile_vlt_flags {
                    # Flags from driver cmdline override default flags and
                    # flags from the test itself
                    @Opt_Driver_Verilator_Flags,
-                   $param{top_filename},
-                   @{$param{v_other_filenames}},
-                   ($param{stdout_filename}?"> ".$param{stdout_filename}:""),
         );
     return @cmdargs;
 }
@@ -772,7 +787,7 @@ sub lint {
                  make_main => 0,
                  make_top_shell => 0,
                  verilator_flags2 => ["--lint-only"],
-                 verilator_make_gcc => 0,
+                 verilator_make_gmake => 0,
                  @_);
     $self->compile(%param);
 }
@@ -784,7 +799,7 @@ sub compile {
     return 1 if $self->errors || $self->skips || $self->unsupporteds;
     $self->oprint("Compile\n") if $self->{verbose};
 
-    compile_vlt_flags(%param);
+    compile_vlt_cmd(%param);
 
     if (!$self->{make_top_shell}) {
         $param{top_shell_filename}
@@ -893,7 +908,6 @@ sub compile {
                     cmd=>\@cmd);
     }
     elsif ($param{vlt_all}) {
-        my @cmdargs = $self->compile_vlt_flags(%param);
 
         if ($self->sc && !$self->have_sc) {
             $self->skip("Test requires SystemC; ignore error since not installed\n");
@@ -909,15 +923,42 @@ sub compile {
             $self->_make_main();
         }
 
-        $self->_run(logfile=>"$self->{obj_dir}/vlt_compile.log",
-                    fails=>$param{fails},
-                    tee=>$param{tee},
-                    expect=>$param{expect},
-                    expect_filename=>$param{expect_filename},
-                    cmd=>\@cmdargs) if $::Opt_Verilation;
-        return 1 if $self->errors || $self->skips || $self->unsupporteds;
+        if ($param{verilator_make_gmake}) {
+            my @vlt_cmd = $self->compile_vlt_cmd(%param);
+            $self->_run(logfile=>"$self->{obj_dir}/vlt_compile.log",
+                        fails=>$param{fails},
+                        tee=>$param{tee},
+                        expect=>$param{expect},
+                        expect_filename=>$param{expect_filename},
+                        cmd=>\@vlt_cmd) if $::Opt_Verilation;
+            return 1 if $self->errors || $self->skips || $self->unsupporteds;
+        }
 
-        if (!$param{fails} && $param{verilator_make_gcc}) {
+        if ($param{verilator_make_cmake}) {
+            my @vlt_args = $self->compile_vlt_flags(%param);
+            $self->oprint("GCC\n") if $self->{verbose};
+            mkdir $self->{obj_dir};
+            my @csources = ();
+            unshift @csources, $self->{main_filename} if $param{make_main};
+            unlink "$self->{obj_dir}/CMakeCache.txt";
+            $self->_run(logfile=>"$self->{obj_dir}/vlt_make_cmake.log",
+                        fails=>$param{fails},
+                        tee=>$param{tee},
+                        expect=>$param{expect},
+                        expect_filename=>$param{expect_filename},
+                        cmd=>["cmake",
+                              "-S ".$::RealBin,
+                              "-B ".$self->{obj_dir},
+                              "-DTEST_VERILATOR_ROOT=$ENV{VERILATOR_ROOT}",
+                              "-DTEST_NAME=$self->{name}",
+                              "-DTEST_CSOURCES=\"@csources\"",
+                              "-DTEST_VERILATOR_ARGS=\"@vlt_args\"",
+                              "-DTEST_VERILATOR_SOURCES=\"$param{top_filename} @{$param{v_other_filenames}}\"",
+                        ]) if $::Opt_Verilation;
+            return 1 if $self->errors || $self->skips || $self->unsupporteds;
+        }
+
+        if (!$param{fails} && $param{verilator_make_gmake}) {
             $self->oprint("GCC\n") if $self->{verbose};
             $self->_run(logfile=>"$self->{obj_dir}/vlt_gcc.log",
                         cmd=>["make",
@@ -933,6 +974,22 @@ sub compile {
                               "$self->{VM_PREFIX}",  # bypass default rule, as we don't need archive
                               ($param{make_flags}||""),
                         ]);
+        }
+
+        if (!$param{fails} && $param{verilator_make_cmake}) {
+            $self->oprint("GCC\n") if $self->{verbose};
+            $self->_run(logfile=>"$self->{obj_dir}/vlt_make_cmake.log",
+                        cmd=>["cmake", "--build", $self->{obj_dir},
+                        ]);
+                        #     ($self->{verbose} ? "" : "--no-print-directory"),
+                        #     "VM_PREFIX=$self->{VM_PREFIX}",
+                        #     "TEST_OBJ_DIR=$self->{obj_dir}",
+                        #     "CPPFLAGS_DRIVER=-D".uc($self->{name}),
+                        #     ($opt_verbose ? "CPPFLAGS_DRIVER2=-DTEST_VERBOSE=1":""),
+                        #     ($param{make_main}?"":"MAKE_MAIN=0"),
+                        #     ($param{benchmark}?"OPT_FAST=-O2":""),
+                        #     "$self->{VM_PREFIX}",  # bypass default rule, as we don't need archive
+                        #);
         }
     }
     else {

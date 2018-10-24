@@ -6,7 +6,7 @@
 //
 //*************************************************************************
 //
-// Copyright 2004-2018 by Wilson Snyder.  This program is free software; you can
+// Copyright 2004-2019 by Wilson Snyder.  This program is free software; you can
 // redistribute it and/or modify it under the terms of either the GNU
 // Lesser General Public License Version 3 or the Perl Artistic License
 // Version 2.0.
@@ -35,45 +35,45 @@
 
 #include <memory>
 
-// Print CMake variable set command
-// cache_type should be empty for a normal variable
-// "BOOL", "FILEPATH", "PATH", "STRING" or "INTERNAL" for a CACHE variable
-// See https://cmake.org/cmake/help/latest/command/set.html
-static void cmake_set(std::ofstream& of, const string& name, const string& value,
-                        const string& cache_type = "", const string& docstring = "") {
-    of << "set(" + name + " " + value;
-    if (!cache_type.empty()) {
-        of << (" CACHE " + cache_type + " " + docstring);
-    }
-    of << ")\n";
-}
-
-// Concatenate all strings in 'strs' with 'joint' between them
+// Concatenate all strings in 'strs' with 'joint' between them.
 template<typename List>
-static string join(const List& strs, const string& joint) {
+static string cmake_list(const List& strs, const string& joint=" ") {
     string s;
     if (strs.begin() != strs.end()) {
+        s.append("\"");
         s.append(*strs.begin());
+        s.append("\"");
         for (typename List::const_iterator i = ++strs.begin(); i != strs.end(); i++) {
             s.append(joint);
+            s.append("\"");
             s.append(*i);
+            s.append("\"");
         }
     }
     return s;
 }
 
-// Concatenate and quote strings
-template<typename List>
-static string cmake_list(const List& strs) {
-    return "\"" + join(strs, "\" \"") + "\"";
+// Print CMake variable set command: output raw_value unmodified
+// cache_type should be empty for a normal variable
+// "BOOL", "FILEPATH", "PATH", "STRING" or "INTERNAL" for a CACHE variable
+// See https://cmake.org/cmake/help/latest/command/set.html
+static void cmake_set_raw(std::ofstream& of, const string& name, const string& raw_value,
+                        const string& cache_type = "", const string& docstring = "") {
+    of << "set(" << name << " " << raw_value;
+    if (!cache_type.empty()) {
+        of << " CACHE " << cache_type << " " << docstring;
+    }
+    of << ")\n";
 }
 
-static string quote(const string& s) {
-    return "\"" + s + "\"";
+static void cmake_set(std::ofstream& of, const string& name, const string& value,
+                        const string& cache_type = "", const string& docstring = "") {
+    string raw_value = "\"" + value + "\"";
+    cmake_set_raw(of, name, raw_value, cache_type, docstring);
 }
 
 //Swap all backslashes for forward slashes, because of Windows
-static string normalise(string s) {
+static string normalize(string s) {
     for (string::iterator i = s.begin(); i != s.end(); i++) {
         if (*i == '\\')
             *i = '/';
@@ -86,23 +86,23 @@ void V3EmitCMake::emit(AstNetlist* nodep) {
     UINFO(2,__FUNCTION__<<": "<<endl);
     string name = v3Global.opt.prefix();
     *of << "# List generated files for CMake\n";
-    
+
     *of << "\n### Constants...\n";
-    cmake_set(*of, "PERL", normalise(V3Options::getenvPERL()), "FILEPATH", "\"Perl executable (from $PERL)\"");
-    cmake_set(*of, "VERILATOR_ROOT", normalise(V3Options::getenvVERILATOR_ROOT()), "PATH" ,"\"Path to Verilator kit (from $VERILATOR_ROOT)\"");
-    cmake_set(*of, "SYSTEMC_INCLUDE", normalise(V3Options::getenvSYSTEMC_INCLUDE()), "PATH", "\"SystemC include directory with systemc.h (from $SYSTEMC_INCLUDE)\"");
-    cmake_set(*of, "SYSTEMC_LIBDIR", normalise(V3Options::getenvSYSTEMC_LIBDIR()), "PATH", "\"SystemC library directory with libsystemc.a (from $SYSTEMC_LIBDIR)\"");
+    cmake_set(*of, "PERL", normalize(V3Options::getenvPERL()), "FILEPATH", "\"Perl executable (from $PERL)\"");
+    cmake_set(*of, "VERILATOR_ROOT", normalize(V3Options::getenvVERILATOR_ROOT()), "PATH" ,"\"Path to Verilator kit (from $VERILATOR_ROOT)\"");
+    cmake_set(*of, "SYSTEMC_INCLUDE", normalize(V3Options::getenvSYSTEMC_INCLUDE()), "PATH", "\"SystemC include directory with systemc.h (from $SYSTEMC_INCLUDE)\"");
+    cmake_set(*of, "SYSTEMC_LIBDIR", normalize(V3Options::getenvSYSTEMC_LIBDIR()), "PATH", "\"SystemC library directory with libsystemc.a (from $SYSTEMC_LIBDIR)\"");
 
     *of << "\n### Switches...\n";
     *of << "# SystemC output mode?  0/1 (from --sc)\n";
-    cmake_set(*of, "VM_SC", v3Global.opt.systemC() ? "1" : "0");
+    cmake_set_raw(*of, "VM_SC", v3Global.opt.systemC() ? "1" : "0");
 
     *of << "# User CFLAGS (from -CFLAGS on Verilator command line)\n";
-    cmake_set(*of, "VM_USER_CFLAGS", join(v3Global.opt.cFlags(), " "));
+    cmake_set_raw(*of, "VM_USER_CFLAGS", cmake_list(v3Global.opt.cFlags()));
 
     *of << "# User LDLIBS (from -LDFLAGS on Verilator command line)\n";
-    cmake_set(*of, "VM_USER_LDLIBS", join(v3Global.opt.ldLibs(), " "));
-    
+    cmake_set(*of, "VM_USER_LDLIBS", cmake_list(v3Global.opt.ldLibs()));
+
     *of << "\n### Switches...\n";
     *of << "# Coverage output mode?  0/1 (from --coverage)\n";
     cmake_set(*of, name + "_COVERAGE", v3Global.opt.coverage()?"1":"0");
@@ -159,19 +159,19 @@ void V3EmitCMake::emit(AstNetlist* nodep) {
     }
 
     *of << "# Global classes, need linked once per executable\n";
-    cmake_set(*of, name + "_GLOBAL", normalise(cmake_list(global)));
+    cmake_set_raw(*of, name + "_GLOBAL", normalize(cmake_list(global)));
     *of << "# Generated module classes, non-fast-path, compile with low/medium optimization\n";
-    cmake_set(*of, name + "_CLASSES_SLOW", normalise(cmake_list(classes_slow)));
+    cmake_set_raw(*of, name + "_CLASSES_SLOW", normalize(cmake_list(classes_slow)));
     *of << "# Generated module classes, fast-path, compile with highest optimization\n";
-    cmake_set(*of, name + "_CLASSES_FAST", normalise(cmake_list(classes_fast)));
+    cmake_set_raw(*of, name + "_CLASSES_FAST", normalize(cmake_list(classes_fast)));
     *of << "# Generated support classes, non-fast-path, compile with low/medium optimization\n";
-    cmake_set(*of, name + "_SUPPORT_SLOW", normalise(cmake_list(support_slow)));
+    cmake_set_raw(*of, name + "_SUPPORT_SLOW", normalize(cmake_list(support_slow)));
     *of << "# Generated support classes, fast-path, compile with highest optimization\n";
-    cmake_set(*of, name + "_SUPPORT_FAST", normalise(cmake_list(support_fast)));
+    cmake_set_raw(*of, name + "_SUPPORT_FAST", normalize(cmake_list(support_fast)));
 
     *of << "# All dependencies\n";
-    cmake_set(*of, name + "_DEPS", normalise(cmake_list(V3File::getAllDeps())));
+    cmake_set_raw(*of, name + "_DEPS", normalize(cmake_list(V3File::getAllDeps())));
 
     *of << "# User .cpp files (from .cpp's on Verilator command line)\n";
-    cmake_set(*of, name + "_USER_CLASSES", normalise(cmake_list(v3Global.opt.cppFiles())));
+    cmake_set_raw(*of, name + "_USER_CLASSES", normalize(cmake_list(v3Global.opt.cppFiles())));
 }

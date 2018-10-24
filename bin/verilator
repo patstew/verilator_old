@@ -277,7 +277,7 @@ detailed descriptions in L</"VERILATION ARGUMENTS"> for more information.
     --cc                        Create C++ output
     --cdc                       Clock domain crossing analysis
     --clk <signal-name>         Mark specified signal as clock
-    --cmake                     Generate CMake file list instead of MakeFile
+    --make <build-system>       Generate scripts for specified build system
     --compiler <compiler-name>  Tune for specified C++ compiler
     --converge-limit <loops>    Tune convergence settle time
     --coverage                  Enable all coverage
@@ -563,9 +563,9 @@ If clock signals are assigned to vectors and then later used individually,
 Verilator will attempt to decompose the vector and connect the single-bit
 clock signals directly.  This should be transparent to the user.
 
-=item --cmake
+=item --make <build-system>
 
-Generates a listfile for CMake instead of a Makefile. See CMake below.
+Generates a script for the specified build system.
 
 =item --compiler I<compiler-name>
 
@@ -2361,8 +2361,9 @@ VERILATOR_BIN to the appropriate values, and also creates a verilate() function.
 verilate() will automatically create custom commands to run verilator and add
 the resulting C++ sources to the target specified.
 
-    verilate(target TRACE SYSTEMC NAME name TOP top SOURCES ... ARGS ...
-             INCLUDEDIRS ... SLOW_FLAGS ... FAST_FLAGS ...)
+    verilate(target SOURCES source ... [TOP_MODULE top] [PREFIX name] [TRACE]
+             [SYSTEMC] [COVERAGE] [INCLUDEDIRS dirs] [SLOW_CFLAGS ...]
+             [FAST_CFLAGS ...] [ARGS ...])
 
 Lowercase and ... should be replaced with arguments, the uppercase parts delimit
 the arguments and can be passed in any order, or left out entirely if optional.
@@ -2373,6 +2374,22 @@ the arguments and can be passed in any order, or left out entirely if optional.
 
 Name of a target created by add_executable or add_library.
 
+=item SOURCES
+
+List of verilog files to verilate. Must have at least one file.
+
+=item PREFIX
+
+Optional. Sets the verilator output prefix. Defaults to the name of the first
+hdl source with a "V" prepended. Must be unique in each call to verilate(),
+so this is necessary if you build a module multiple times with
+different parameters.
+
+=item TOP_MODULE
+
+Optional. Sets the name of the top module. Defaults to the name of the first
+file in the SOURCES array.
+
 =item TRACE
 
 Optional. Enables tracing if present, equivalent to "ARGS --trace ...".
@@ -2381,37 +2398,26 @@ Optional. Enables tracing if present, equivalent to "ARGS --trace ...".
 
 Optional. Enables SystemC mode, defaults to C++ if not specified.
 
-=item NAME
+=item COVERAGE
 
-Optional. Sets the verilator output prefix. Defaults to "Vtop" for a verilog
-module called "top". Must be unique in each call to verilate(), so this is
-necessary if you build a module multiple times with different parameters.
-
-=item TOP
-
-Optional. Sets the name of the top module. Defaults to the name of the first
-file in the SOURCES array.
-
-=item SOURCES
-
-List of verilog files to verilate. Must have at least one file.
-
-=item ARGS
-
-Optional. Extra arguments to verilator.
+Optional. Enables coverage if present, equivalent to "ARGS --coverage ...".
 
 =item INCLUDEDIRS
 
 Optional. Sets directories that verilator searches (same as -y).
 
-=item SLOW_FLAGS
+=item SLOW_CFLAGS
 
 Optional. Set compiler flags for the slow path. You may want to reduce the
 optimisation level to improve compile times with large designs.
 
-=item FAST_FLAGS
+=item FAST_CFLAGS
 
 Optional. Set compiler flags for the fast path.
+
+=item ARGS
+
+Optional. Extra arguments to verilator.
 
 =back
 

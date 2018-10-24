@@ -120,6 +120,7 @@ DISTFILES_INC = $(INFOS) .gitignore \
 	Changes \
 	LICENSE \
 	MANIFEST.SKIP \
+	verilator-config.cmake \
 	bin/verilator \
 	bin/verilator_coverage \
 	bin/verilator_difftree \
@@ -150,6 +151,11 @@ DISTFILES_INC = $(INFOS) .gitignore \
 	examples/*/CMakeLists.txt \
 	test_*/.*ignore test_*/Makefile* test_*/*.cpp \
 	test_*/*.pl test_*/*.v test_*/*.vc test_*/*.vh \
+	test_regress/*.pl \
+	test_regress/Makefile \
+	test_regress/Makefile_obj \
+	test_regress/input.vc \
+	test_regress/CMakeLists.txt \
 	test_regress/t/t*/*.sv* \
 	test_regress/t/t*/*.v* \
 	test_regress/t/t*/*/*.sv* \
@@ -307,7 +313,7 @@ VL_INST_INC_SRCDIR_FILES = \
 
 VL_INST_DATA_SRCDIR_FILES = \
 	examples/*/*.[chv]*  examples/*/Makefile* \
-	examples/*/CMakeLists.txt \
+	examples/*/CMakeLists.txt
 
 installbin:
 	$(MKINSTALLDIRS) $(DESTDIR)$(bindir)
