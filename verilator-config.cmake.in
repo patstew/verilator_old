@@ -22,9 +22,7 @@ set(verilator_FOUND 1)
 #Check flag support. Skip on MSVC, these are all GCC flags.
 if (NOT (DEFINED VERILATOR_CFLAGS OR CMAKE_CXX_COMPILER_ID MATCHES MSVC))
     include(CheckCXXCompilerFlag)
-    foreach (FLAG -faligned-new -fbracket-depth=4096 -Qunused-arguments -Wno-bool-operation -Wno-parentheses-equality
-                  -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter
-                  -Wno-unused-variable -Wno-shadow)
+    foreach (FLAG @VERILATE_FLAGS@)
         string(MAKE_C_IDENTIFIER ${FLAG} FLAGNAME)
         check_cxx_compiler_flag(${FLAG} ${FLAGNAME})
         if (${FLAGNAME})

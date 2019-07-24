@@ -30,4 +30,5 @@ verilator.txt
 verilator_bin*
 verilator_coverage_bin*
 verilator.pc
+verilator-config.cmake
 **/obj_dir/*

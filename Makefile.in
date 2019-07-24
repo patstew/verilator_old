@@ -120,7 +120,7 @@ DISTFILES_INC = $(INFOS) .gitignore \
 	Changes \
 	LICENSE \
 	MANIFEST.SKIP \
-	verilator-config.cmake \
+	verilator-config.cmake.in \
 	bin/verilator \
 	bin/verilator_coverage \
 	bin/verilator_difftree \

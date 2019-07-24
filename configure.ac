@@ -13,7 +13,7 @@ AC_INIT([Verilator],[4.017 devel],
 # and commit using "devel release" or "Version bump" message
 
 AC_CONFIG_HEADER(src/config_build.h)
-AC_CONFIG_FILES(Makefile docs/Makefile src/Makefile src/Makefile_obj include/verilated.mk include/verilated_config.h verilator.pc)
+AC_CONFIG_FILES(Makefile docs/Makefile src/Makefile src/Makefile_obj include/verilated.mk include/verilated_config.h verilator.pc verilator-config.cmake)
 
 AC_MSG_RESULT([configuring for $PACKAGE_STRING])
 
@@ -183,6 +183,7 @@ AC_DEFUN([_MY_CXX_CHECK_SET],
 
 AC_DEFUN([_MY_CXX_CHECK_OPT],
    [# _MY_CXX_CHECK_OPT(flag) -- Check if compiler supports specific options
+    CXX_CHECKED_OPTS+=($2)
     # If it does, append flag to variable
     _MY_CXX_CHECK_FLAG($2)
     if test "$_my_result" = "yes" ; then
@@ -267,6 +268,7 @@ _MY_CXX_CHECK_OPT(CFG_CXXFLAGS_PARSER,-Wno-parentheses-equality)
 _MY_CXX_CHECK_OPT(CFG_CXXFLAGS_PARSER,-Wno-unused)
 AC_SUBST(CFG_CXXFLAGS_PARSER)
 
+CXX_CHECKED_OPTS=()
 # Flags for Verilated makefile
 # For example, -Wno-div-by-zero isn't in 4.1.2
 # Random code often does / 0.  Unfortunately VL_DIV_I(0,0) will warn
@@ -287,6 +289,8 @@ _MY_CXX_CHECK_OPT(CFG_CXXFLAGS_NO_UNUSED,-Wno-unused-parameter)
 _MY_CXX_CHECK_OPT(CFG_CXXFLAGS_NO_UNUSED,-Wno-unused-variable)
 _MY_CXX_CHECK_OPT(CFG_CXXFLAGS_NO_UNUSED,-Wno-shadow)
 AC_SUBST(CFG_CXXFLAGS_NO_UNUSED)
+
+AC_SUBST(VERILATE_FLAGS, [[${CXX_CHECKED_OPTS[@]}]])
 
 # Find multithread linker flags
 _MY_LDLIBS_CHECK_OPT(CFG_LDLIBS_THREADS,-mt)
