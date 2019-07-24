@@ -13,7 +13,7 @@ AC_INIT([Verilator],[4.017 devel],
 # and commit using "devel release" or "Version bump" message
 
 AC_CONFIG_HEADER(src/config_build.h)
-AC_CONFIG_FILES(Makefile docs/Makefile src/Makefile src/Makefile_obj include/verilated.mk include/verilated_config.h verilator.pc verilator-config.cmake)
+AC_CONFIG_FILES(Makefile docs/Makefile src/Makefile src/Makefile_obj include/verilated.mk include/verilated_config.h verilator.pc verilator-config.cmake verilator-config-version.cmake)
 
 AC_MSG_RESULT([configuring for $PACKAGE_STRING])
 

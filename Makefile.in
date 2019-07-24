@@ -121,6 +121,7 @@ DISTFILES_INC = $(INFOS) .gitignore \
 	LICENSE \
 	MANIFEST.SKIP \
 	verilator-config.cmake.in \
+	verilator-config-version.cmake.in \
 	bin/verilator \
 	bin/verilator_coverage \
 	bin/verilator_difftree \
@@ -358,6 +359,7 @@ installdata:
 	$(MKINSTALLDIRS) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) verilator.pc $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) verilator-config.cmake $(DESTDIR)$(datarootdir)/cmake/verilator
+	$(INSTALL_DATA) verilator-config-version.cmake $(DESTDIR)$(datarootdir)/cmake/verilator
 
 # We don't trust rm -rf, so rmdir instead as it will fail if user put in other files
 uninstall:
@@ -369,6 +371,7 @@ uninstall:
 	-cd $(DESTDIR)$(pkgdatadir) && rm -f $(VL_INST_DATA_SRCDIR_FILES)
 	-rm $(DESTDIR)$(pkgconfigdir)/verilator.pc
 	-rm $(DESTDIR)$(datarootdir)/cmake/verilator/verilator-config.cmake
+	-rm $(DESTDIR)$(datarootdir)/cmake/verilator/verilator-config-version.cmake
 	-rmdir $(DESTDIR)$(pkgdatadir)/bin
 	-rmdir $(DESTDIR)$(pkgdatadir)/include/gtkwave
 	-rmdir $(DESTDIR)$(pkgdatadir)/include/vltstd

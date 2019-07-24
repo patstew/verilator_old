@@ -40,6 +40,7 @@ config.status$
 verilator\.log
 verilator\.tex
 verilator-config.cmake$
+verilator-config-version.cmake$
 verilator.pc$
 verilator_bin.*
 verilator_coverage_bin.*
