@@ -68,7 +68,7 @@ function(verilate TARGET)
     endif()
 
     if (VERILATE_TOP_MODULE)
-        list(APPEND VERILATE_TOP_MODULE --top-module ${VERILATE_TOP_MODULE})
+        list(APPEND VERILATOR_ARGS --top-module ${VERILATE_TOP_MODULE})
     endif()
 
     if (VERILATE_COVERAGE)
@@ -101,7 +101,7 @@ function(verilate TARGET)
     set(DIR "${CMAKE_CURRENT_BINARY_DIR}/${VERILATE_PREFIX}.dir")
     file(MAKE_DIRECTORY ${DIR})
 
-    set(VERILATOR_COMMAND "${VERILATOR_BIN}" -Wall -Wno-fatal --compiler ${COMPILER} --top-module ${VERILATE_TOP_MODULE} --prefix ${VERILATE_PREFIX} --Mdir ${DIR} --make cmake ${VERILATOR_ARGS} ${VERILATE_VERILATOR_ARGS} ${VERILATE_SOURCES})
+    set(VERILATOR_COMMAND "${VERILATOR_BIN}" -Wall -Wno-fatal --compiler ${COMPILER} --prefix ${VERILATE_PREFIX} --Mdir ${DIR} --make cmake ${VERILATOR_ARGS} ${VERILATE_VERILATOR_ARGS} ${VERILATE_SOURCES})
 
     set(VCMAKE ${DIR}/${VERILATE_PREFIX}.cmake)
     if (NOT EXISTS ${VCMAKE})
@@ -113,6 +113,8 @@ function(verilate TARGET)
             OUTPUT_VARIABLE _VERILATOR_OUTPUT
             ERROR_VARIABLE _VERILATOR_OUTPUT)
         if (_VERILATOR_RC)
+            string(REPLACE ";" " " VERILATOR_COMMAND_READABLE "${VERILATOR_COMMAND}")
+			message("Command:\n${VERILATOR_COMMAND_READABLE}")
             message("Output:\n${_VERILATOR_OUTPUT}")
             string(REPLACE ";" " " VERILATOR_COMMAND_READABLE "${VERILATOR_COMMAND}")
             message(FATAL_ERROR "Verilator command failed (return code=${_VERILATOR_RC})")

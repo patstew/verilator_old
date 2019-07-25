@@ -351,15 +351,14 @@ installdata:
 	$(MKINSTALLDIRS) $(DESTDIR)$(pkgdatadir)/examples/tracing_c
 	$(MKINSTALLDIRS) $(DESTDIR)$(pkgdatadir)/examples/tracing_sc
 	$(MKINSTALLDIRS) $(DESTDIR)$(pkgdatadir)/examples/cmake
-	$(MKINSTALLDIRS) $(DESTDIR)$(datarootdir)/cmake/verilator
 	cd $(srcdir) \
 	; for p in $(VL_INST_DATA_SRCDIR_FILES) ; do \
 	  $(INSTALL_DATA) $$p $(DESTDIR)$(pkgdatadir)/$$p; \
 	done
 	$(MKINSTALLDIRS) $(DESTDIR)$(pkgconfigdir)
 	$(INSTALL_DATA) verilator.pc $(DESTDIR)$(pkgconfigdir)
-	$(INSTALL_DATA) verilator-config.cmake $(DESTDIR)$(datarootdir)/cmake/verilator
-	$(INSTALL_DATA) verilator-config-version.cmake $(DESTDIR)$(datarootdir)/cmake/verilator
+	$(INSTALL_DATA) verilator-config.cmake $(DESTDIR)$(pkgdatadir)/verilator
+	$(INSTALL_DATA) verilator-config-version.cmake $(DESTDIR)$(pkgdatadir)/verilator
 
 # We don't trust rm -rf, so rmdir instead as it will fail if user put in other files
 uninstall:
@@ -370,8 +369,8 @@ uninstall:
 	-cd $(DESTDIR)$(pkgdatadir) && rm -f $(VL_INST_INC_SRCDIR_FILES)
 	-cd $(DESTDIR)$(pkgdatadir) && rm -f $(VL_INST_DATA_SRCDIR_FILES)
 	-rm $(DESTDIR)$(pkgconfigdir)/verilator.pc
-	-rm $(DESTDIR)$(datarootdir)/cmake/verilator/verilator-config.cmake
-	-rm $(DESTDIR)$(datarootdir)/cmake/verilator/verilator-config-version.cmake
+	-rm $(DESTDIR)$(pkgdatadir)/verilator-config.cmake
+	-rm $(DESTDIR)$(pkgdatadir)/verilator-config-version.cmake
 	-rmdir $(DESTDIR)$(pkgdatadir)/bin
 	-rmdir $(DESTDIR)$(pkgdatadir)/include/gtkwave
 	-rmdir $(DESTDIR)$(pkgdatadir)/include/vltstd
